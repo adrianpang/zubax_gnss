@@ -714,19 +714,17 @@ bool Driver::configureGnss(os::watchdog::Timer& wdt)
             set.configBlocks[1].maxTrkCh = 8;
             set.configBlocks[1].flags = (1U << 16) | 1;
 
-            // Beidou is always disabled. Switching between GNSS can be dangerous, see the section 4.2.1
-            // BeiDou cannot be used concurrently with GLONASS on u-blox M8. We prefer GLONASS because it significantly
-            // outperforms BeiDou in Europe, and probably in the rest of the world barring probably Asia.
+            // Beidou is always enabled
             set.configBlocks[2].gnssId = msg::GnssID::BeiDou;
             set.configBlocks[2].resTrkCh = 8;
             set.configBlocks[2].maxTrkCh = 16;
-            set.configBlocks[2].flags = (1U << 16) | 0;
+            set.configBlocks[2].flags = (1U << 16) | 1;
 
-            // GLONASS is always enabled
+            // GLONASS is always disabled
             set.configBlocks[3].gnssId = msg::GnssID::GLONASS;
             set.configBlocks[3].resTrkCh = 8;
             set.configBlocks[3].maxTrkCh = 14;
-            set.configBlocks[3].flags = (1U << 16) | 1;         // Enabled always
+            set.configBlocks[3].flags = (1U << 16) | 0;
 
             // QZSS must be enabled/disabled together with GPS (see the user manual)
             // L1-SAIF is disabled by default, but we turn it on here
@@ -798,10 +796,30 @@ bool Driver::configureGnss(os::watchdog::Timer& wdt)
     wdt.reset();
     {
         auto nav5 = io_.allocateMessage<msg::CFG_NAV5>();
-        nav5->mask = msg::CFG_NAV5::Mask::dyn;
+        nav5->mask = (msg::CFG_NAV5::Mask::dyn |
+                      msg::CFG_NAV5::Mask::minEl |
+                      msg::CFG_NAV5::Mask::posFixMode |
+                      msg::CFG_NAV5::Mask::posMask |
+                      msg::CFG_NAV5::Mask::timeMask |
+                      msg::CFG_NAV5::Mask::cnoThreshold);
 
         switch (cfg_.dynamic_model)
         {
+        case Config::DynamicModel::Portable:
+        {
+            nav5->dynModel = msg::CFG_NAV5::DynModel::Portable;
+            break;
+        }
+        case Config::DynamicModel::Stationary:
+        {
+            nav5->dynModel = msg::CFG_NAV5::DynModel::Stationary;
+            break;
+        }
+        case Config::DynamicModel::Pedestrian:
+        {
+            nav5->dynModel = msg::CFG_NAV5::DynModel::Pedestrian;
+            break;
+        }
         case Config::DynamicModel::Automotive:
         {
             nav5->dynModel = msg::CFG_NAV5::DynModel::Automotive;
@@ -812,7 +830,17 @@ bool Driver::configureGnss(os::watchdog::Timer& wdt)
             nav5->dynModel = msg::CFG_NAV5::DynModel::Sea;
             break;
         }
-        case Config::DynamicModel::Airborne:
+        case Config::DynamicModel::Airborne_1g:
+        {
+            nav5->dynModel = msg::CFG_NAV5::DynModel::Airborne_1g;
+            break;
+        }
+        case Config::DynamicModel::Airborne_2g:
+        {
+            nav5->dynModel = msg::CFG_NAV5::DynModel::Airborne_2g;
+            break;
+        }
+        case Config::DynamicModel::Airborne_4g:
         {
             nav5->dynModel = msg::CFG_NAV5::DynModel::Airborne_4g;
             break;
@@ -820,15 +848,81 @@ bool Driver::configureGnss(os::watchdog::Timer& wdt)
         default:
         {
             assert(false);
-            nav5->dynModel = msg::CFG_NAV5::DynModel::Airborne_4g;      // The default
+            nav5->dynModel = msg::CFG_NAV5::DynModel::Airborne_1g;
             break;
         }
         }
         os::lowsyslog("ublox: Dynamic model: 0x%02x\n", int(nav5->dynModel));
 
+        switch (cfg_.fix_mode)
+        {
+        case Config::FixMode::Fix2D:
+        {
+            nav5->fixMode = msg::CFG_NAV5::FixMode::Fix2D;
+            break;
+        }
+        case Config::FixMode::Fix3D:
+        {
+            nav5->fixMode = msg::CFG_NAV5::FixMode::Fix3D;
+            break;
+        }
+        case Config::FixMode::Auto2D3D:
+        {
+            nav5->fixMode = msg::CFG_NAV5::FixMode::Auto2D3D;
+            break;
+        }
+        default:
+        {
+            assert(false);
+            nav5->fixMode = msg::CFG_NAV5::FixMode::Fix3D;
+            break;
+        }
+        }
+        os::lowsyslog("ublox: Fix mode: 0x%02x\n", int(nav5->fixMode));
+
+        nav5->fixedAlt = (ublox::msg::I4) 0;
+        nav5->fixedAltVar = (ublox::msg::U4) 10000;
+        nav5->minElev = (ublox::msg::I1) cfg_.min_elevation;
+        nav5->drLimit = (ublox::msg::U1) 0;
+        nav5->pDop = (ublox::msg::U2) cfg_.pdop_mask;
+        nav5->tDop = (ublox::msg::U2) cfg_.tdop_mask;
+        nav5->pAcc = (ublox::msg::U2) cfg_.pacc_mask;
+        nav5->tAcc = (ublox::msg::U2) cfg_.tacc_mask;
+        nav5->staticHoldThresh = (ublox::msg::U1) 0;
+        nav5->dgnssTimeout = (ublox::msg::U1) 60;
+        nav5->cnoThreshNumSVs = (ublox::msg::U1) cfg_.cno_threshold_num_svs;
+        nav5->cnoThresh = (ublox::msg::U1) cfg_.cno_threshold;
+        nav5->reserved1[0] = (ublox::msg::U1) 0;
+        nav5->reserved1[1] = (ublox::msg::U1) 0;
+        nav5->staticHoldMaxDist = (ublox::msg::U1) 0;
+        nav5->reserved2[0] = (ublox::msg::U1) 0;
+        nav5->reserved2[1] = (ublox::msg::U1) 0;
+        nav5->reserved2[2] = (ublox::msg::U1) 0;
+        nav5->reserved2[3] = (ublox::msg::U1) 0;
+        nav5->reserved2[4] = (ublox::msg::U1) 0;
+
         if (!io_.sendAndWaitAck(Message::make(*nav5)))
         {
             os::lowsyslog("ublox: CFG-NAV5 failed\n");
+            return false;
+        }
+    }
+
+    // NAVX5
+    wdt.reset();
+    {
+        auto navx5 = io_.allocateMessage<msg::CFG_NAVX5>();
+        navx5->version = (ublox::msg::U2) 0x0000;
+        navx5->mask1 = (msg::CFG_NAVX5::Mask1::minMax |
+                        msg::CFG_NAVX5::Mask1::minCno);
+
+        navx5->minSVs = (ublox::msg::U1) cfg_.min_svs;
+        navx5->maxSVs = (ublox::msg::U1) cfg_.max_svs;
+        navx5->minCNO = (ublox::msg::U1) cfg_.min_cno;
+
+        if (!io_.sendAndWaitAck(Message::make(*navx5)))
+        {
+            os::lowsyslog("ublox: CFG-NAVX5 failed\n");
             return false;
         }
     }

@@ -171,10 +171,10 @@ struct CFG_NAV5
     U2 pAcc;
     U2 tAcc;
     U1 staticHoldThresh;
-    U1 dgpsTimeOut;
+    U1 dgnssTimeout;
     U1 cnoThreshNumSVs;
     U1 cnoThresh;
-    U2 reserved;
+    U1 reserved1[2];
     U2 staticHoldMaxDist;
 
     enum class UtcStandard : U1
@@ -185,11 +185,64 @@ struct CFG_NAV5
         BeiDou       = 7
     } utcStandard;
 
-    U1 reserved3;
-    U4 reserved4;
+    U1 reserved2[5];
 };
 static_assert(sizeof(CFG_NAV5) == 36, "Struct size error");
 
+struct CFG_NAVX5
+{
+    static constexpr unsigned Class = 0x06;
+    static constexpr unsigned ID    = 0x23;
+
+    U2 version;
+    X2 mask1;
+
+    struct Mask1
+    {
+        // Empty 1
+        // Empty 2
+        static constexpr X2 minMax       = 4;
+        static constexpr X2 minCno       = 8;
+        // Empty 16
+        // Empty 32
+        static constexpr X2 initial3dfix = 64;
+        // Empty 128
+        // Empty 256
+        static constexpr X2 wknRoll      = 512;
+        static constexpr X2 ackAid       = 1024;
+        // Empty 2048
+        // Empty 4096
+        static constexpr X2 ppp          = 8192;
+        static constexpr X2 aop          = 16384;
+        // Empty 32768
+    };
+
+    X4 mask2;
+
+    struct Mask2
+    {
+        static constexpr X4 adr          = 64;
+    };
+
+    U1 reserved1[2];
+    U1 minSVs;
+    U1 maxSVs;
+    U1 minCNO;
+    U1 reserved2;
+    U1 iniFix3D;
+    U1 reserved3[2];
+    U1 ackAiding;
+    U2 wknRollover;
+    U1 reserved4[6];
+    U1 usePPP;
+    U1 aopCfg;
+    U1 reserved5[2];
+    U2 aopOrbMaxErr;
+    U1 reserved6[4];
+    U1 reserved7[3];
+    U1 useAdr;
+};
+static_assert(sizeof(CFG_NAVX5) == 40, "Struct size error");
 
 struct CFG_RATE
 {

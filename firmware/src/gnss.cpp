@@ -39,7 +39,7 @@ namespace
 SerialDriver* const serial_port = &SD2;
 
 os::config::Param<unsigned> param_gnss_fix_period_usec("uavcan.pubp-fix",
-                                                       100000, 66666, 2000000);
+                                                       200000, 66666, 2000000);
 
 os::config::Param<unsigned> param_gnss_aux_period_usec("uavcan.pubp-aux",
                                                        1000000, 100000, 1000000);
@@ -62,7 +62,62 @@ os::config::Param<std::uint8_t> param_gnss_dynamic_model("gnss.dyn_model",
                                                          0,
                                                          ublox::Config::NumDynamicModels - 1);
 
-os::config::Param<bool> param_gnss_use_old_fix_message("gnss.old_fix_msg", true);
+os::config::Param<std::uint8_t> param_gnss_fix_mode("gnss.fix_mode",
+                                                    std::uint8_t(ublox::Config().fix_mode),
+                                                    1,
+                                                    3);
+
+os::config::Param<std::int8_t> param_gnss_min_elevation("gnss.min_elevation",
+                                                        std::int8_t(ublox::Config().min_elevation),
+                                                        -128,
+                                                        127);
+
+os::config::Param<std::uint16_t> param_gnss_pdop_mask("gnss.pdop_mask",
+                                                      std::uint16_t(ublox::Config().pdop_mask),
+                                                      0,
+                                                      65535);
+
+os::config::Param<std::uint16_t> param_gnss_tdop_mask("gnss.tdop_mask",
+                                                      std::uint16_t(ublox::Config().tdop_mask),
+                                                      0,
+                                                      65535);
+
+os::config::Param<std::uint16_t> param_gnss_pacc_mask("gnss.pacc_mask",
+                                                      std::uint16_t(ublox::Config().pacc_mask),
+                                                      0,
+                                                      65535);
+
+os::config::Param<std::uint16_t> param_gnss_tacc_mask("gnss.tacc_mask",
+                                                      std::uint16_t(ublox::Config().tacc_mask),
+                                                      0,
+                                                      65535);
+
+os::config::Param<std::uint8_t> param_gnss_cno_threshold_num_svs("gnss.cno_threshold_num_svs",
+                                                                 std::uint8_t(ublox::Config().cno_threshold_num_svs),
+                                                                 0,
+                                                                 255);
+
+os::config::Param<std::uint8_t> param_gnss_cno_threshold("gnss.cno_threshold",
+                                                         std::uint8_t(ublox::Config().cno_threshold),
+                                                         0,
+                                                         255);
+
+os::config::Param<std::uint8_t> param_gnss_min_svs("gnss.min_svs",
+                                                   std::uint8_t(ublox::Config().min_svs),
+                                                   0,
+                                                   255);
+
+os::config::Param<std::uint8_t> param_gnss_max_svs("gnss.max_svs",
+                                                   std::uint8_t(ublox::Config().max_svs),
+                                                   0,
+                                                   255);
+
+os::config::Param<std::uint8_t> param_gnss_min_cno("gnss.min_cno",
+                                                   std::uint8_t(ublox::Config().min_cno),
+                                                   0,
+                                                   255);
+
+os::config::Param<bool> param_gnss_use_old_fix_message("gnss.old_fix_msg", false);
 
 chibios_rt::Mutex last_sample_mutex;
 Auxiliary last_sample_aux;
@@ -341,6 +396,17 @@ class GnssThread : public chibios_rt::BaseStaticThread<3000>
         cfg.fix_rate_hz = 1e6F / param_gnss_fix_period_usec.get();
         cfg.aux_rate_hz = 1e6F / param_gnss_aux_period_usec.get();
         cfg.dynamic_model = ublox::Config::DynamicModel(param_gnss_dynamic_model.get());
+        cfg.fix_mode = ublox::Config::FixMode(param_gnss_fix_mode.get());
+        cfg.min_elevation = (int8_t) param_gnss_min_elevation.get();
+        cfg.pdop_mask = (uint16_t) param_gnss_pdop_mask.get();
+        cfg.tdop_mask = (uint16_t) param_gnss_tdop_mask.get();
+        cfg.pacc_mask = (uint16_t) param_gnss_pacc_mask.get();
+        cfg.tacc_mask = (uint16_t) param_gnss_tacc_mask.get();
+        cfg.cno_threshold_num_svs = (uint8_t) param_gnss_cno_threshold_num_svs.get();
+        cfg.cno_threshold = (uint8_t) param_gnss_cno_threshold.get();
+        cfg.min_svs = (uint8_t) param_gnss_min_svs.get();
+        cfg.max_svs = (uint8_t) param_gnss_max_svs.get();
+        cfg.min_cno = (uint8_t) param_gnss_min_cno.get();
 
         while (shouldKeepGoing() && !driver_.configure(cfg, watchdog_))
         {

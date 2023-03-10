@@ -45,7 +45,7 @@ const float OperatingTemperatureRange[] = {             ///< Operating temperatu
 const unsigned MinPublicationPeriodUSec = unsigned(1e6 / 40);
 
 os::config::Param<unsigned> param_period_usec("uavcan.pubp-pres",
-                                              0, 0, 1000000);
+                                              50000, 0, 1000000);
 
 os::config::Param<unsigned> param_prio("uavcan.prio-pres",
                                        16,

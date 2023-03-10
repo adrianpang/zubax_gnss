@@ -292,17 +292,40 @@ struct Config
 {
     enum class DynamicModel : std::uint8_t
     {
-        Automotive,
-        Sea,
-        Airborne
+        Portable    = 0,
+        Stationary  = 2,
+        Pedestrian  = 3,
+        Automotive  = 4,
+        Sea         = 5,
+        Airborne_1g = 6,
+        Airborne_2g = 7,
+        Airborne_4g = 8
     };
 
-    static constexpr std::uint8_t NumDynamicModels = 3; ///< Please maintain this carefully!
+    enum class FixMode : std::uint8_t
+    {
+        Fix2D = 1,
+        Fix3D = 2,
+        Auto2D3D = 3
+    };
+
+    static constexpr std::uint8_t NumDynamicModels = 9; ///< Please maintain this carefully!
 
     float fix_rate_hz = 10;
     float aux_rate_hz = 1;
 
-    DynamicModel dynamic_model = DynamicModel::Airborne;
+    DynamicModel dynamic_model = DynamicModel::Airborne_1g;
+    FixMode fix_mode = FixMode::Fix3D;
+    std::int8_t min_elevation = 15;
+    std::uint16_t pdop_mask = 250;
+    std::uint16_t tdop_mask = 250;
+    std::uint16_t pacc_mask = 100;
+    std::uint16_t tacc_mask = 300;
+    std::uint8_t cno_threshold_num_svs = 3;
+    std::uint8_t cno_threshold = 32;
+    std::uint8_t min_svs = 3;
+    std::uint8_t max_svs = 32;
+    std::uint8_t min_cno = 32;
 };
 
 class Driver

@@ -39,7 +39,7 @@ namespace
 const unsigned MinTimeSyncPubPeriodUSec = 500000;
 const unsigned IfaceLedUpdatePeriodMSec = 25;
 
-os::config::Param<unsigned> param_node_id("uavcan.node_id", 0, 0, 125);
+os::config::Param<unsigned> param_node_id("uavcan.node_id", 11, 0, 125);
 
 os::config::Param<unsigned> param_time_sync_period_usec("uavcan.pubp-time",
                                                         0, 0, 1000000);
@@ -51,7 +51,7 @@ os::config::Param<unsigned> param_time_sync_prio("uavcan.prio-time",
 
 os::config::Param<unsigned> param_node_status_pub_interval_usec(
     "uavcan.pubp-stat",
-    200000,
+    1000000,
     uavcan::protocol::NodeStatus::MIN_BROADCASTING_PERIOD_MS * 1000,
     uavcan::protocol::NodeStatus::MAX_BROADCASTING_PERIOD_MS * 1000);
 
