@@ -179,8 +179,8 @@ void publishFix2(const Fix& data, const ublox::GpsLeapSeconds& leaps)
         uavcan::equipment::gnss::Fix2::MODE_SINGLE;
 
     // Uncertainty
-    if (msg.status > uavcan::equipment::gnss::Fix2::STATUS_TIME_ONLY)
-    {
+    //if (msg.status > uavcan::equipment::gnss::Fix2::STATUS_TIME_ONLY)
+    //{
         // Assuming that the matrices are diagonal.
         // Full construction and compression of a 6x6 matrix is too computationally expensive for this MCU at 15 Hz.
         // Position
@@ -191,7 +191,7 @@ void publishFix2(const Fix& data, const ublox::GpsLeapSeconds& leaps)
         msg.covariance.push_back(data.velocity_covariance[0]);
         msg.covariance.push_back(data.velocity_covariance[4]);
         msg.covariance.push_back(data.velocity_covariance[8]);
-    }
+    //}
 
     // Misc
     msg.sats_used = data.sats_used;
