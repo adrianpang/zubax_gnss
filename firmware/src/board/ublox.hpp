@@ -322,10 +322,10 @@ struct Config
     std::uint16_t pacc_mask = 100;
     std::uint16_t tacc_mask = 300;
     std::uint8_t cno_threshold_num_svs = 3;
-    std::uint8_t cno_threshold = 32;
+    std::uint8_t cno_threshold = 26;
     std::uint8_t min_svs = 3;
     std::uint8_t max_svs = 32;
-    std::uint8_t min_cno = 32;
+    std::uint8_t min_cno = 26;
 };
 
 class Driver
