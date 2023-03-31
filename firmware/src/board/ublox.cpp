@@ -702,48 +702,96 @@ bool Driver::configureGnss(os::watchdog::Timer& wdt)
             set.numTrkChUse = cfg_gnss_ptr->numTrkChHw;
             set.numConfigBlocks = 7;
 
-            // GPS is always enabled
+            // GPS
             set.configBlocks[0].gnssId = msg::GnssID::GPS;
             set.configBlocks[0].resTrkCh = 8;
             set.configBlocks[0].maxTrkCh = 16;
-            set.configBlocks[0].flags = (1U << 16) | 1;
+            if ((cfg_.constellation_mask & 0x01) == 0x01)
+            {
+                set.configBlocks[0].flags = (1U << 24) | (1U << 16) | 1;
+            }
+            else
+            {
+                set.configBlocks[0].flags = (1U << 24) | (1U << 16) | 0;
+            }
 
-            // Galileo is always enabled
-            set.configBlocks[1].gnssId = msg::GnssID::Galileo;
-            set.configBlocks[1].resTrkCh = 4;
-            set.configBlocks[1].maxTrkCh = 8;
-            set.configBlocks[1].flags = (1U << 16) | 1;
+            // SBAS
+            set.configBlocks[1].gnssId = msg::GnssID::SBAS;
+            set.configBlocks[1].resTrkCh = 1;
+            set.configBlocks[1].maxTrkCh = 3;
+            if ((cfg_.constellation_mask & 0x02) == 0x02)
+            {
+                set.configBlocks[1].flags = (1U << 24) | (1U << 16) | 1;
+            }
+            else
+            {
+                set.configBlocks[1].flags = (1U << 24) | (1U << 16) | 0;
+            }
 
-            // Beidou is always enabled
-            set.configBlocks[2].gnssId = msg::GnssID::BeiDou;
-            set.configBlocks[2].resTrkCh = 8;
-            set.configBlocks[2].maxTrkCh = 16;
-            set.configBlocks[2].flags = (1U << 16) | 1;
+            // Galileo
+            set.configBlocks[2].gnssId = msg::GnssID::Galileo;
+            set.configBlocks[2].resTrkCh = 4;
+            set.configBlocks[2].maxTrkCh = 8;
+            if ((cfg_.constellation_mask & 0x04) == 0x04)
+            {
+                set.configBlocks[2].flags = (1U << 24) | (1U << 16) | 1;
+            }
+            else
+            {
+                set.configBlocks[2].flags = (1U << 24) | (1U << 16) | 0;
+            }
 
-            // GLONASS is always disabled
-            set.configBlocks[3].gnssId = msg::GnssID::GLONASS;
+            // Beidou
+            set.configBlocks[3].gnssId = msg::GnssID::BeiDou;
             set.configBlocks[3].resTrkCh = 8;
-            set.configBlocks[3].maxTrkCh = 14;
-            set.configBlocks[3].flags = (1U << 16) | 0;
+            set.configBlocks[3].maxTrkCh = 16;
+            if ((cfg_.constellation_mask & 0x08) == 0x08)
+            {
+                set.configBlocks[3].flags = (1U << 24) | (1U << 16) | 1;
+            }
+            else
+            {
+                set.configBlocks[3].flags = (1U << 24) | (1U << 16) | 0;
+            }
 
-            // QZSS must be enabled/disabled together with GPS (see the user manual)
-            // L1-SAIF is disabled by default, but we turn it on here
-            set.configBlocks[4].gnssId = msg::GnssID::QZSS;
+            // IMES
+            set.configBlocks[4].gnssId = msg::GnssID::IMES;
             set.configBlocks[4].resTrkCh = 0;
-            set.configBlocks[4].maxTrkCh = 3;
-            set.configBlocks[4].flags = (4U << 16) | (1U << 16) | 1;
+            set.configBlocks[4].maxTrkCh = 8;
+            if ((cfg_.constellation_mask & 0x10) == 0x10)
+            {
+                set.configBlocks[4].flags = (1U << 24) | (1U << 16) | 1;
+            }
+            else
+            {
+                set.configBlocks[4].flags = (1U << 24) | (1U << 16) | 0;
+            }
 
-            // SBAS is always enabled, like GPS
-            set.configBlocks[5].gnssId = msg::GnssID::SBAS;
-            set.configBlocks[5].resTrkCh = 1;
+            // QZSS
+            set.configBlocks[5].gnssId = msg::GnssID::QZSS;
+            set.configBlocks[5].resTrkCh = 0;
             set.configBlocks[5].maxTrkCh = 3;
-            set.configBlocks[5].flags = (1U << 16) | 1;
+            if ((cfg_.constellation_mask & 0x20) == 0x20)
+            {
+                set.configBlocks[5].flags = (1U << 24) | (1U << 16) | 1;
+            }
+            else
+            {
+                set.configBlocks[5].flags = (1U << 24) | (1U << 16) | 0;
+            }
 
-            // IMES is always disabled
-            set.configBlocks[6].gnssId = msg::GnssID::IMES;
-            set.configBlocks[6].resTrkCh = 0;
-            set.configBlocks[6].maxTrkCh = 8;
-            set.configBlocks[6].flags = (1U << 16) | 0;
+            // GLONASS
+            set.configBlocks[6].gnssId = msg::GnssID::GLONASS;
+            set.configBlocks[6].resTrkCh = 8;
+            set.configBlocks[6].maxTrkCh = 14;
+            if ((cfg_.constellation_mask & 0x40) == 0x40)
+            {
+                set.configBlocks[6].flags = (1U << 24) | (1U << 16) | 1;
+            }
+            else
+            {
+                set.configBlocks[6].flags = (1U << 24) | (1U << 16) | 0;
+            }
 
             os::lowsyslog("ublox: Setting new CFG-GNSS...\n");
             if (!io_.sendAndWaitAck(Message::make(set, set.computeLength())))
@@ -919,6 +967,7 @@ bool Driver::configureGnss(os::watchdog::Timer& wdt)
         navx5->minSVs = (ublox::msg::U1) cfg_.min_svs;
         navx5->maxSVs = (ublox::msg::U1) cfg_.max_svs;
         navx5->minCNO = (ublox::msg::U1) cfg_.min_cno;
+        navx5->iniFix3D = (ublox::msg::U1) 1;
 
         if (!io_.sendAndWaitAck(Message::make(*navx5)))
         {

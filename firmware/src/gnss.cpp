@@ -117,6 +117,11 @@ os::config::Param<std::uint8_t> param_gnss_min_cno("gnss.min_cno",
                                                    0,
                                                    255);
 
+os::config::Param<std::uint8_t> param_gnss_constellation_mask("gnss.constellation_mask",
+                                                              std::uint8_t(ublox::Config().constellation_mask),
+                                                              0,
+                                                              255);
+
 os::config::Param<bool> param_gnss_use_old_fix_message("gnss.old_fix_msg", false);
 
 chibios_rt::Mutex last_sample_mutex;
@@ -407,6 +412,7 @@ class GnssThread : public chibios_rt::BaseStaticThread<3000>
         cfg.min_svs = (uint8_t) param_gnss_min_svs.get();
         cfg.max_svs = (uint8_t) param_gnss_max_svs.get();
         cfg.min_cno = (uint8_t) param_gnss_min_cno.get();
+        cfg.constellation_mask = (uint8_t) param_gnss_constellation_mask.get();
 
         while (shouldKeepGoing() && !driver_.configure(cfg, watchdog_))
         {

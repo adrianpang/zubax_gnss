@@ -326,6 +326,7 @@ struct Config
     std::uint8_t min_svs = 3;
     std::uint8_t max_svs = 32;
     std::uint8_t min_cno = 26;
+    std::uint8_t constellation_mask = 43;
 };
 
 class Driver
