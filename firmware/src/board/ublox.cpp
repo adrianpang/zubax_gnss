@@ -962,7 +962,8 @@ bool Driver::configureGnss(os::watchdog::Timer& wdt)
         auto navx5 = io_.allocateMessage<msg::CFG_NAVX5>();
         navx5->version = (ublox::msg::U2) 0x0000;
         navx5->mask1 = (msg::CFG_NAVX5::Mask1::minMax |
-                        msg::CFG_NAVX5::Mask1::minCno);
+                        msg::CFG_NAVX5::Mask1::minCno |
+                        msg::CFG_NAVX5::Mask1::initial3dfix);
 
         navx5->minSVs = (ublox::msg::U1) cfg_.min_svs;
         navx5->maxSVs = (ublox::msg::U1) cfg_.max_svs;
